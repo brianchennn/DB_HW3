@@ -52,7 +52,7 @@ int main(int argc,char *argv[])
 		for(int i=0;i<str.length();i++){
 			if(str[i]!=' ')tmp.push_back(str[i]);
 			else{
-				v.push_back(tmp);
+				
 				if(tmp == "=" )flag=1;
 				else if(tmp[0] == '$'){
 					tmp.erase(tmp.begin());
@@ -66,7 +66,7 @@ int main(int argc,char *argv[])
 			tmp.erase(tmp.begin());
 			regs.push_back(stoi(tmp));
 		}
-		thread Thread(threadfunc,pa);
+		thread Thread(threadfunc,regs);
 		counter++;
 		ReadWrite.push_back(regs);
 	}
