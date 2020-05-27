@@ -6,10 +6,12 @@
 #include<stdio.h>
 #include<cstdlib>
 #include<vector>
+#include <unistd.h>
 #include<semaphore.h>
 using namespace std;
 
 
+sem_t semaphore;
 void *threadfunc(void* arg){
 
 	//pthread_exit();
@@ -18,9 +20,8 @@ void *threadfunc(void* arg){
 int main()
 {
 	fstream file;
-	sem_t *semaphore;
-	unsigned un=0;
-	sem_init(semaphore,0,un);
+	pthread_t t;
+	sem_init(&semaphore,0,0);
 	file.open("data/data2",ios::in);
 	int n;file>>n;
 	int a[n];
@@ -66,5 +67,6 @@ int main()
 		}
 		cout<<endl;
 	}
+
 
 }
