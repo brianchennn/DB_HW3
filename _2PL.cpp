@@ -22,13 +22,13 @@ void threadfunc(vector<int> regs){
 	
 }
 
-int main(int argc,char *argv[])
+int main()
 {
 	fstream file;
 	//thread Thread[stoi(argv[0])];
 	file.open("data/data2",ios::in);
 	int n;file>>n;
-	
+	vector<thread*> Threadvector; 
 	int in;
 	for(int i=0;i<n;i++){
 		file>>in;
@@ -39,7 +39,6 @@ int main(int argc,char *argv[])
 		VXmutex.push_back(XMutex);
 	}
 	string str;
-	string::size_type sz;
 	vector<vector<int> > ReadWrite;
 	vector<string> line;
 	int counter = 0;
@@ -67,8 +66,13 @@ int main(int argc,char *argv[])
 			regs.push_back(stoi(tmp));
 		}
 		thread Thread(threadfunc,regs);
+		Threadvector.push_back(&Thread);
+		//Thread.join();
 		counter++;
 		ReadWrite.push_back(regs);
+	}
+	for(int i=0;i<Threadvector.size();i++){
+		Threadvector[i]->join();
 	}
 	cout<<ReadWrite.size();
 	
