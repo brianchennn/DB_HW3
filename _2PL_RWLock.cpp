@@ -7,16 +7,21 @@
 #include<vector>
 #include <unistd.h>
 #include<semaphore.h>
+#include<shared_mutex>
 #include<mutex>
+#include<time.h>
+#include<chrono>
 using namespace std;
-vector<mutex*> VSmutex;
+vector<shared_mutex*> VSmutex;
 vector<mutex*> VXmutex;
+
 vector<int> a;
 sem_t semaphore;
 void threadfunc(vector<int> regs,string str){
-	
-	//phase 1
+	//unique_lock<mutex*> lk1(VSmutex[regs[0]]);
+//********************* phase 1 **********************************
 	VXmutex[regs[0]]->lock();
+	//unique_lock<mutex> lock(VXmutex[regs[0]]);
 	VSmutex[regs[0]]->lock();
 	//cout<<"locking X S $"<<regs[0]<<endl;
 	for(int i=1;i<regs.size();i++){
@@ -64,7 +69,7 @@ void threadfunc(vector<int> regs,string str){
 	}
 	
 	a[regs[0]] = ans ;
-	//phase 2
+//*********************** phase 2 **********************************
 	VXmutex[regs[0]]->unlock();
 	VSmutex[regs[0]]->unlock();
 	//cout<<"unlocking X S $"<<regs[0]<<endl;
@@ -77,6 +82,9 @@ void threadfunc(vector<int> regs,string str){
 
 int main(int argc,char *argv[])
 {
+	clock_t start, end;
+	start = clock();
+	auto startTime = std::chrono::high_resolution_clock::now();
 	//fstream file;
 	fstream file_out;
 	//thread Thread[stoi(argv[0])];
@@ -89,10 +97,11 @@ int main(int argc,char *argv[])
 	for(int i=0;i<n;i++){
 		cin>>in;
 		a.push_back(in);
-		mutex *SMutex = new(mutex);
+		shared_mutex *SMutex = new(shared_mutex);
 		VSmutex.push_back(SMutex);
 		mutex *XMutex = new(mutex);
 		VXmutex.push_back(XMutex);
+		
 	}
 	string str;
 	vector<vector<int> > ReadWrite;
@@ -111,12 +120,8 @@ int main(int argc,char *argv[])
 				if(tmp == "=" )flag=1;
 				else if(tmp[0] == '$'){
 					tmp.erase(tmp.begin());
-					int r = stoi(tmp);
-					bool flag=0;
-					for(int i=0;i<regs.size();i++){
-						if(regs[i]==r)flag=1;
-					}
-					if(flag==0)regs.push_back(stoi(tmp));
+					vector<int>::iterator it = find(regs.begin(),regs.end(),stoi(tmp));
+					if(it==regs.end())regs.push_back(stoi(tmp));
 					
 				}
 				tmp="";
@@ -136,6 +141,10 @@ int main(int argc,char *argv[])
 	for(int i=0;i<n;i++){
 		file_out<<"$"<<i<<" = "<<a[i]<<endl;
 	}
-
+	end = clock();
+	auto endTime = std::chrono::high_resolution_clock::now();
+	float totalTime = std::chrono::duration<float, std::milli> (endTime - startTime).count();
+	cout<<"totalTime = "<<totalTime<<endl;
+	cout<<"time = "<<end - start<<endl;
 
 }
