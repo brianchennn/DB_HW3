@@ -77,17 +77,17 @@ void threadfunc(vector<int> regs,string str){
 
 int main(int argc,char *argv[])
 {
-	fstream file;
+	//fstream file;
 	fstream file_out;
 	//thread Thread[stoi(argv[0])];
-	file.open("data/data3",ios::in);
-	file_out.open("data_out",ios::out);
-	int n;file>>n;
-	vector<thread *> Threadvector(16);
+	//file.open("data/data3",ios::in);
+	file_out.open(argv[2],ios::out);
+	int n;cin>>n;
+	vector<thread *> Threadvector(stoi(argv[1]));
 	
 	int in;
 	for(int i=0;i<n;i++){
-		file>>in;
+		cin>>in;
 		a.push_back(in);
 		mutex *SMutex = new(mutex);
 		VSmutex.push_back(SMutex);
@@ -97,8 +97,9 @@ int main(int argc,char *argv[])
 	string str;
 	vector<vector<int> > ReadWrite;
 	int counter = 0;
-	getline(file,str);
-	while(getline(file,str)){
+	getline(cin,str);
+	while(getline(cin,str)){
+		
 		//cout<<"str="<<str<<endl;
 		if(str=="")break;
 		vector<int> regs;
@@ -121,11 +122,13 @@ int main(int argc,char *argv[])
 			tmp.erase(tmp.begin());
 			regs.push_back(stoi(tmp));
 		}
-		Threadvector[counter++%16] = new thread(threadfunc,regs,str);// 這裡出問題
+		Threadvector[counter++%stoi(argv[1])] = new thread(threadfunc,regs,str);// 這裡出問題
 		//threadfunc(regs,str);
 		ReadWrite.push_back(regs);
 	}
-		
+	for(int i=0;i<stoi(argv[1]);i++){
+		Threadvector[i]->join();
+	}
 	for(int i=0;i<n;i++){
 		file_out<<"$"<<i<<" = "<<a[i]<<endl;
 	}
