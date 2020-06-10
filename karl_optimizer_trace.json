@@ -1,0 +1,221 @@
+| explain 
+select final.position, champ.champion_name
+from
+(
+    select list.position, list.champion_id
+    from
+    (
+        select position, champion_id, count(champion_id) as cnt
+        from
+        (
+            select match_id
+            from match_info
+            where duration >= 2400 and duration <= 3000
+        ) as dur_match, 
+        (
+            select match_id, champion_id, position
+            from participant
+            where position = 'TOP' or position = 'MID' or position = 'JUNGLE'
+            or position = 'DUO_CARRY' or position = 'DUO_SUPPORT'
+        ) as par
+        where par.match_id = dur_match.match_id
+        group by position, champion_id
+        order by cnt desc
+    ) as list,
+    (
+        select grp_pos_champ.position, max(grp_pos_champ.cnt) as cnt
+        from
+        (
+            select position, champion_id, count(champion_id) as cnt
+            from
+            (
+                select match_id
+                from match_info
+                where duration >= 2400 and duration <= 3000
+            ) as dur_match, 
+            (
+                select match_id, champion_id, position
+                from participant
+                where position = 'TOP' or position = 'MID' or position = 'JUNGLE'
+                or position = 'DUO_CARRY' or position = 'DUO_SUPPORT'
+            ) as par
+            where par.match_id = dur_match.match_id
+            group by position, champion_id
+            order by cnt desc
+        ) as grp_pos_champ
+        group by grp_pos_champ.position
+    ) as tmp
+    where list.position = tmp.position
+    and list.cnt = tmp.cnt
+) as final, champ
+where final.champion_id = champ.champion_id
+order by final.position | {
+  "steps": [
+    {
+      "join_preparation": {
+        "select#": 1,
+        "steps": [
+          {
+            "join_preparation": {
+              "select#": 2,
+              "steps": [
+                {
+                  "join_preparation": {
+                    "select#": 3,
+                    "steps": [
+                      {
+                        "join_preparation": {
+                          "select#": 4,
+                          "steps": [
+                            {
+                              "expanded_query": "/* select#4 */ select `match_info`.`match_id` AS `match_id` from `match_info` where ((`match_info`.`duration` >= 2400) and (`match_info`.`duration` <= 3000))"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "join_preparation": {
+                          "select#": 5,
+                          "steps": [
+                            {
+                              "expanded_query": "/* select#5 */ select `participant`.`match_id` AS `match_id`,`participant`.`champion_id` AS `champion_id`,`participant`.`position` AS `position` from `participant` where ((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "derived": {
+                          "table": "``.`` `dur_match`",
+                          "select#": 4,
+                          "merged": true
+                        }
+                      },
+                      {
+                        "derived": {
+                          "table": "``.`` `par`",
+                          "select#": 5,
+                          "merged": true
+                        }
+                      },
+                      {
+                        "expanded_query": "/* select#3 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from (`match_info`) join (`participant`) on(((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))) where (`participant`.`match_id` = `match_info`.`match_id`) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "join_preparation": {
+                    "select#": 6,
+                    "steps": [
+                      {
+                        "join_preparation": {
+                          "select#": 7,
+                          "steps": [
+                            {
+                              "join_preparation": {
+                                "select#": 8,
+                                "steps": [
+                                  {
+                                    "expanded_query": "/* select#8 */ select `match_info`.`match_id` AS `match_id` from `match_info` where ((`match_info`.`duration` >= 2400) and (`match_info`.`duration` <= 3000))"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "join_preparation": {
+                                "select#": 9,
+                                "steps": [
+                                  {
+                                    "expanded_query": "/* select#9 */ select `participant`.`match_id` AS `match_id`,`participant`.`champion_id` AS `champion_id`,`participant`.`position` AS `position` from `participant` where ((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))"
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "derived": {
+                                "table": "``.`` `dur_match`",
+                                "select#": 8,
+                                "merged": true
+                              }
+                            },
+                            {
+                              "derived": {
+                                "table": "``.`` `par`",
+                                "select#": 9,
+                                "merged": true
+                              }
+                            },
+                            {
+                              "expanded_query": "/* select#7 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from (`match_info`) join (`participant`) on(((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))) where (`participant`.`match_id` = `match_info`.`match_id`) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "derived": {
+                          "table": " `grp_pos_champ`",
+                          "select#": 7,
+                          "materialized": true
+                        }
+                      },
+                      {
+                        "expanded_query": "/* select#6 */ select `grp_pos_champ`.`position` AS `position`,max(`grp_pos_champ`.`cnt`) AS `cnt` from (/* select#7 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from (`match_info`) join (`participant`) on(((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))) where (`participant`.`match_id` = `match_info`.`match_id`) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc) `grp_pos_champ` group by `grp_pos_champ`.`position`"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "derived": {
+                    "table": " `list`",
+                    "select#": 3,
+                    "materialized": true
+                  }
+                },
+                {
+                  "derived": {
+                    "table": " `tmp`",
+                    "select#": 6,
+                    "materialized": true
+                  }
+                },
+                {
+                  "expanded_query": "/* select#2 */ select `list`.`position` AS `position`,`list`.`champion_id` AS `champion_id` from (/* select#3 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from (`match_info`) join (`participant`) on(((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))) where (`participant`.`match_id` = `match_info`.`match_id`) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc) `list` join (/* select#6 */ select `grp_pos_champ`.`position` AS `position`,max(`grp_pos_champ`.`cnt`) AS `cnt` from (/* select#7 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from (`match_info`) join (`participant`) on(((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))) where (`participant`.`match_id` = `match_info`.`match_id`) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc) `grp_pos_champ` group by `grp_pos_champ`.`position`) `tmp` where ((`list`.`position` = `tmp`.`position`) and (`list`.`cnt` = `tmp`.`cnt`))"
+                }
+              ]
+            }
+          },
+          {
+            "derived": {
+              "table": "``.`` `final`",
+              "select#": 2,
+              "merged": true
+            }
+          },
+          {
+            "expanded_query": "/* select#1 */ select `list`.`position` AS `position`,`champ`.`champion_name` AS `champion_name` from ((/* select#3 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from (`match_info`) join (`participant`) on(((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))) where (`participant`.`match_id` = `match_info`.`match_id`) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc) `list` join (/* select#6 */ select `grp_pos_champ`.`position` AS `position`,max(`grp_pos_champ`.`cnt`) AS `cnt` from (/* select#7 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from (`match_info`) join (`participant`) on(((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT'))) where (`participant`.`match_id` = `match_info`.`match_id`) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc) `grp_pos_champ` group by `grp_pos_champ`.`position`) `tmp`) join `champ` where (`list`.`champion_id` = `champ`.`champion_id`) order by `list`.`position`"
+          },
+          {
+            "transformations_to_nested_joins": {
+              "transformations": [
+                "JOIN_condition_to_WHERE",
+                "parenthesis_removal"
+              ],
+              "expanded_query": "/* select#7 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from `match_info` join `participant` where ((`participant`.`match_id` = `match_info`.`match_id`) and ((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT')) and (`match_info`.`duration` >= 2400) and (`match_info`.`duration` <= 3000)) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc"
+            }
+          },
+          {
+            "transformations_to_nested_joins": {
+              "transformations": [
+                "JOIN_condition_to_WHERE",
+                "parenthesis_removal"
+              ],
+              "expanded_query": "/* select#3 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from `match_info` join `participant` where ((`participant`.`match_id` = `match_info`.`match_id`) and ((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT')) and (`match_info`.`duration` >= 2400) and (`match_info`.`duration` <= 3000)) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc"
+            }
+          },
+          {
+            "transformations_to_nested_joins": {
+              "transformations": [
+                "JOIN_condition_to_WHERE",
+                "parenthesis_removal"
+              ],
+              "expanded_query": "/* select#1 */ select `list`.`position` AS `position`,`champ`.`champion_name` AS `champion_name` from (/* select#3 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from `match_info` join `participant` where ((`participant`.`match_id` = `match_info`.`match_id`) and ((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT')) and (`match_info`.`duration` >= 2400) and (`match_info`.`duration` <= 3000)) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc) `list` join (/* select#6 */ select `grp_pos_champ`.`position` AS `position`,max(`grp_pos_champ`.`cnt`) AS `cnt` from (/* select#7 */ select `participant`.`position` AS `position`,`participant`.`champion_id` AS `champion_id`,count(`participant`.`champion_id`) AS `cnt` from `match_info` join `participant` where ((`participant`.`match_id` = `match_info`.`match_id`) and ((`participant`.`position` = 'TOP') or (`participant`.`position` = 'MID') or (`participant`.`position` = 'JUNGLE') or (`participant`.`position` = 'DUO_CARRY') or (`participant`.`position` = 'DUO_SUPPORT')) and (`match_info`.`duration` >= 2400) and (`match_info`.`duration` <= 3000)) group by `participant`.`position`,`participant`.`champion_id` order by `cnt` desc) `grp_pos_champ` group by `grp_pos_champ`.`position`) `tmp` join `champ` where ((`list`.`champion_id` = `champ`.`champion_id`) and (`list`.`position` = `tmp`.`position`) and (`list`.`cnt` = `tmp`.`cnt`)) order by `list`.`position` |                             53512 |                       0 |

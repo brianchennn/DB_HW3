@@ -7,21 +7,23 @@
 #include<vector>
 #include <unistd.h>
 #include<semaphore.h>
-#include<mutex>
+#include<shared_mutex>
 using namespace std;
-vector<mutex*> VSmutex;
-vector<mutex*> VXmutex;
+vector<shared_mutex*> VSshared_mutex;
+vector<shared_mutex*> VXshared_mutex;
 vector<int> a;
 sem_t semaphore;
 void threadfunc(vector<int> regs,string str){
-	
+	cout<<regs.size()<<endl;
 	//phase 1
-	VXmutex[regs[0]]->lock();
-	VSmutex[regs[0]]->lock();
+	unique_lock<shared_mutex> Xlock(*VSshared_mutex[regs[0]]);
+	//VXshared_mutex[regs[0]]->lock();
+	//VSshared_mutex[regs[0]]->lock();
 	//cout<<"locking X S $"<<regs[0]<<endl;
 	for(int i=1;i<regs.size();i++){
-		VSmutex[regs[i]]->lock();
-		//cout<<"locking S $"<<regs[i]<<endl;
+		unique_lock<shared_mutex> Slock(*VSshared_mutex[regs[i]]);
+		//VSshared_mutex[regs[i]]->lock();
+		cout<<"locking S $"<<regs[i]<<endl;
 	}
 	int ans = 0;
 	string tmp="";
@@ -65,11 +67,11 @@ void threadfunc(vector<int> regs,string str){
 	
 	a[regs[0]] = ans ;
 	//phase 2
-	VXmutex[regs[0]]->unlock();
-	VSmutex[regs[0]]->unlock();
+	//VXshared_mutex[regs[0]]->unlock();
+	VSshared_mutex[regs[0]]->unlock();
 	//cout<<"unlocking X S $"<<regs[0]<<endl;
 	for(int i=1;i<regs.size();i++){
-		VSmutex[regs[i]]->unlock();
+		VSshared_mutex[regs[i]]->unlock();
 		//cout<<"locking S $"<<regs[i]<<endl;
 	}
 	
@@ -89,10 +91,10 @@ int main(int argc,char *argv[])
 	for(int i=0;i<n;i++){
 		cin>>in;
 		a.push_back(in);
-		mutex *SMutex = new(mutex);
-		VSmutex.push_back(SMutex);
-		mutex *XMutex = new(mutex);
-		VXmutex.push_back(XMutex);
+		shared_mutex *SMutex = new(shared_mutex);
+		VSshared_mutex.push_back(SMutex);
+		shared_mutex *XMutex = new(shared_mutex);
+		VXshared_mutex.push_back(XMutex);
 	}
 	string str;
 	vector<vector<int> > ReadWrite;
@@ -116,8 +118,10 @@ int main(int argc,char *argv[])
 					for(int i=0;i<regs.size();i++){
 						if(regs[i]==r)flag=1;
 					}
-					if(flag==0)regs.push_back(stoi(tmp));
-					
+					if(flag==0){
+						regs.push_back(stoi(tmp));
+						cout<<tmp<<" ";		
+					}						
 				}
 				tmp="";
 			}
@@ -129,6 +133,8 @@ int main(int argc,char *argv[])
 		Threadvector[counter++%stoi(argv[1])] = new thread(threadfunc,regs,str);// 這裡出問題
 		//threadfunc(regs,str);
 		ReadWrite.push_back(regs);
+		cout<<"\n";
+		
 	}
 	for(int i=0;i<stoi(argv[1]);i++){
 		Threadvector[i]->join();

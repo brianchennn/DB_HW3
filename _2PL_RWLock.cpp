@@ -12,6 +12,28 @@
 #include<time.h>
 #include<chrono>
 using namespace std;
+class Semaphore {
+public:
+  explicit Semaphore(int count = 0) : count_(count) {
+  }
+
+  void Signal() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    ++count_;
+    cv_.notify_one();
+  }
+
+  void Wait() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait(lock, [=] { return count_ > 0; });
+    --count_;
+  }
+
+private:
+  std::mutex mutex_;
+  std::condition_variable cv_;
+  int count_;
+};
 vector<shared_mutex*> VSmutex;
 vector<mutex*> VXmutex;
 
@@ -20,12 +42,12 @@ sem_t semaphore;
 void threadfunc(vector<int> regs,string str){
 	//unique_lock<mutex*> lk1(VSmutex[regs[0]]);
 //********************* phase 1 **********************************
-	VXmutex[regs[0]]->lock();
+	//VXmutex[regs[0]]->lock();
 	//unique_lock<mutex> lock(VXmutex[regs[0]]);
-	VSmutex[regs[0]]->lock();
+	//VSmutex[regs[0]]->lock();
 	//cout<<"locking X S $"<<regs[0]<<endl;
 	for(int i=1;i<regs.size();i++){
-		VSmutex[regs[i]]->lock();
+		//VSmutex[regs[i]]->lock();
 		//cout<<"locking S $"<<regs[i]<<endl;
 	}
 	int ans = 0;
@@ -70,11 +92,11 @@ void threadfunc(vector<int> regs,string str){
 	
 	a[regs[0]] = ans ;
 //*********************** phase 2 **********************************
-	VXmutex[regs[0]]->unlock();
-	VSmutex[regs[0]]->unlock();
+	//VXmutex[regs[0]]->unlock();
+	//VSmutex[regs[0]]->unlock();
 	//cout<<"unlocking X S $"<<regs[0]<<endl;
 	for(int i=1;i<regs.size();i++){
-		VSmutex[regs[i]]->unlock();
+		//VSmutex[regs[i]]->unlock();
 		//cout<<"locking S $"<<regs[i]<<endl;
 	}
 	
@@ -104,7 +126,7 @@ int main(int argc,char *argv[])
 		
 	}
 	string str;
-	vector<vector<int> > ReadWrite;
+	//vector<vector<int> > ReadWrite;
 	int counter = 0;
 	getline(cin,str);
 	while(getline(cin,str)){
@@ -133,7 +155,7 @@ int main(int argc,char *argv[])
 		}
 		Threadvector[counter++%stoi(argv[1])] = new thread(threadfunc,regs,str);// 這裡出問題
 		//threadfunc(regs,str);
-		ReadWrite.push_back(regs);
+		//ReadWrite.push_back(regs);
 	}
 	for(int i=0;i<stoi(argv[1]);i++){
 		Threadvector[i]->join();
