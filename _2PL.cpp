@@ -14,15 +14,15 @@ vector<mutex*> VXmutex;
 vector<int> a;
 sem_t semaphore;
 void threadfunc(vector<int> regs,string str){
-	cout<<regs.size()<<endl;
+	//cout<<regs.size()<<endl;
 	//phase 1
-	VXmutex[regs[0]]->lock();
-	VSmutex[regs[0]]->lock();
+	//VXmutex[regs[0]]->lock();
+	//VSmutex[regs[0]]->lock();
 	//cout<<"locking X S $"<<regs[0]<<endl;
-	for(int i=1;i<regs.size();i++){
-		VSmutex[regs[i]]->lock();
-		cout<<"locking S $"<<regs[i]<<endl;
-	}
+	//for(int i=1;i<regs.size();i++){
+		//VSmutex[regs[i]]->lock();
+		//cout<<"locking S $"<<regs[i]<<endl;
+	//}
 	int ans = 0;
 	string tmp="";
 	int i=0;
@@ -65,19 +65,20 @@ void threadfunc(vector<int> regs,string str){
 	
 	a[regs[0]] = ans ;
 	//phase 2
-	VXmutex[regs[0]]->unlock();
-	VSmutex[regs[0]]->unlock();
+	//VXmutex[regs[0]]->unlock();
+	//VSmutex[regs[0]]->unlock();
 	//cout<<"unlocking X S $"<<regs[0]<<endl;
-	for(int i=1;i<regs.size();i++){
-		VSmutex[regs[i]]->unlock();
+	//for(int i=1;i<regs.size();i++){
+		//VSmutex[regs[i]]->unlock();
 		//cout<<"locking S $"<<regs[i]<<endl;
-	}
+	//}
 	
 }
 
 int main(int argc,char *argv[])
 {
 	//fstream file;
+	auto startTime = std::chrono::high_resolution_clock::now();
 	fstream file_out;
 	//thread Thread[stoi(argv[0])];
 	//file.open("data/data3",ios::in);
@@ -118,7 +119,7 @@ int main(int argc,char *argv[])
 					}
 					if(flag==0){
 						regs.push_back(stoi(tmp));
-						cout<<tmp<<" ";		
+						//cout<<tmp<<" ";		
 					}						
 				}
 				tmp="";
@@ -128,10 +129,20 @@ int main(int argc,char *argv[])
 			tmp.erase(tmp.begin());
 			regs.push_back(stoi(tmp));
 		}
+		VXmutex[regs[0]]->lock();
+		VSmutex[regs[0]]->lock();
+		for(int i=1;i<regs.size();i++){
+			VSmutex[regs[i]]->lock();
+		}
 		Threadvector[counter++%stoi(argv[1])] = new thread(threadfunc,regs,str);// 這裡出問題
+		VXmutex[regs[0]]->unlock();
+		VSmutex[regs[0]]->unlock();
+		for(int i=1;i<regs.size();i++){
+			VSmutex[regs[i]]->unlock();
+		}	
 		//threadfunc(regs,str);
 		ReadWrite.push_back(regs);
-		cout<<"\n";
+		//cout<<"\n";
 		
 	}
 	for(int i=0;i<stoi(argv[1]);i++){
@@ -140,6 +151,8 @@ int main(int argc,char *argv[])
 	for(int i=0;i<n;i++){
 		file_out<<"$"<<i<<" = "<<a[i]<<endl;
 	}
-
+	auto endTime = std::chrono::high_resolution_clock::now();
+	float totalTime = std::chrono::duration<float, std::milli> (endTime - startTime).count();
+	cout<<"totalTime "<<totalTime<<endl;
 
 }
