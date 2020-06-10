@@ -7,22 +7,20 @@
 #include<vector>
 #include <unistd.h>
 #include<semaphore.h>
-#include<shared_mutex>
+#include<mutex>
 using namespace std;
-vector<shared_mutex*> VSshared_mutex;
-vector<shared_mutex*> VXshared_mutex;
+vector<mutex*> VSmutex;
+vector<mutex*> VXmutex;
 vector<int> a;
 sem_t semaphore;
 void threadfunc(vector<int> regs,string str){
 	cout<<regs.size()<<endl;
 	//phase 1
-	unique_lock<shared_mutex> Xlock(*VSshared_mutex[regs[0]]);
-	//VXshared_mutex[regs[0]]->lock();
-	//VSshared_mutex[regs[0]]->lock();
+	VXmutex[regs[0]]->lock();
+	VSmutex[regs[0]]->lock();
 	//cout<<"locking X S $"<<regs[0]<<endl;
 	for(int i=1;i<regs.size();i++){
-		unique_lock<shared_mutex> Slock(*VSshared_mutex[regs[i]]);
-		//VSshared_mutex[regs[i]]->lock();
+		VSmutex[regs[i]]->lock();
 		cout<<"locking S $"<<regs[i]<<endl;
 	}
 	int ans = 0;
@@ -67,11 +65,11 @@ void threadfunc(vector<int> regs,string str){
 	
 	a[regs[0]] = ans ;
 	//phase 2
-	//VXshared_mutex[regs[0]]->unlock();
-	VSshared_mutex[regs[0]]->unlock();
+	VXmutex[regs[0]]->unlock();
+	VSmutex[regs[0]]->unlock();
 	//cout<<"unlocking X S $"<<regs[0]<<endl;
 	for(int i=1;i<regs.size();i++){
-		VSshared_mutex[regs[i]]->unlock();
+		VSmutex[regs[i]]->unlock();
 		//cout<<"locking S $"<<regs[i]<<endl;
 	}
 	
@@ -91,10 +89,10 @@ int main(int argc,char *argv[])
 	for(int i=0;i<n;i++){
 		cin>>in;
 		a.push_back(in);
-		shared_mutex *SMutex = new(shared_mutex);
-		VSshared_mutex.push_back(SMutex);
-		shared_mutex *XMutex = new(shared_mutex);
-		VXshared_mutex.push_back(XMutex);
+		mutex *SMutex = new(mutex);
+		VSmutex.push_back(SMutex);
+		mutex *XMutex = new(mutex);
+		VXmutex.push_back(XMutex);
 	}
 	string str;
 	vector<vector<int> > ReadWrite;
