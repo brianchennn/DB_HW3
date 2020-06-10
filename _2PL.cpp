@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include<semaphore.h>
 #include<shared_mutex>
+#include<chrono>
 using namespace std;
 vector<shared_mutex*> VSshared_mutex;
 vector<shared_mutex*> VXshared_mutex;
@@ -17,12 +18,10 @@ void threadfunc(vector<int> regs,string str){
 	cout<<regs.size()<<endl;
 	//phase 1
 	unique_lock<shared_mutex> Xlock(*VSshared_mutex[regs[0]]);
-	//VXshared_mutex[regs[0]]->lock();
-	//VSshared_mutex[regs[0]]->lock();
-	//cout<<"locking X S $"<<regs[0]<<endl;
+	
 	for(int i=1;i<regs.size();i++){
-		unique_lock<shared_mutex> Slock(*VSshared_mutex[regs[i]]);
-		//VSshared_mutex[regs[i]]->lock();
+		shared_lock<shared_mutex> Slock(*VSshared_mutex[regs[i]]);
+		
 		cout<<"locking S $"<<regs[i]<<endl;
 	}
 	int ans = 0;
@@ -67,18 +66,19 @@ void threadfunc(vector<int> regs,string str){
 	
 	a[regs[0]] = ans ;
 	//phase 2
-	//VXshared_mutex[regs[0]]->unlock();
+	
 	VSshared_mutex[regs[0]]->unlock();
-	//cout<<"unlocking X S $"<<regs[0]<<endl;
+
 	for(int i=1;i<regs.size();i++){
 		VSshared_mutex[regs[i]]->unlock();
-		//cout<<"locking S $"<<regs[i]<<endl;
+	
 	}
 	
 }
 
 int main(int argc,char *argv[])
 {
+	auto startTime = std::chrono::high_resolution_clock::now();
 	//fstream file;
 	fstream file_out;
 	//thread Thread[stoi(argv[0])];
@@ -143,5 +143,7 @@ int main(int argc,char *argv[])
 		file_out<<"$"<<i<<" = "<<a[i]<<endl;
 	}
 
-
+	auto endTime = std::chrono::high_resolution_clock::now();
+	float totalTime = std::chrono::duration<float, std::milli> (endTime - startTime).count();
+	cout<<"totalTime = "<<totalTime<<"ms"<<endl;
 }
